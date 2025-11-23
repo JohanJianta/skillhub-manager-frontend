@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import useSWR, { mutate } from "swr";
 import Navigation from "@/app/components/Navigation";
+import toast from "react-hot-toast";
 import Modal from "@/app/components/Modal";
 import CourseForm from "@/app/components/CourseForm";
+import { fetchJson } from "@/lib/api";
 
 interface Course {
   id: number;
@@ -14,27 +17,34 @@ interface Course {
 }
 
 export default function CoursesPage() {
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: 1,
-      name: "Introduction to Computer Science",
-      description: "Learn the basics of CS",
-      schedule: "2025-01-10T10:00",
-    },
-    { id: 2, name: "Data Structures", description: "Advanced data structure concepts", schedule: "2025-01-12T14:00" },
-    { id: 3, name: "Web Development", description: "Modern web development practices", schedule: "2025-01-15T09:00" },
-    { id: 4, name: "Database Design", description: "Database design and optimization", schedule: "2025-01-17T13:00" },
-  ]);
+  const { data: courses } = useSWR<Course[]>("/courses", fetchJson);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleAddCourse = (data: { name: string; description: string; schedule: string }) => {
-    const newCourse: Course = {
-      id: Math.max(...courses.map((c) => c.id), 0) + 1,
-      ...data,
-    };
-    setCourses([...courses, newCourse]);
-    setIsModalOpen(false);
+  const handleAddCourse = async (data: {
+    name: string;
+    description: string;
+    schedule: string;
+    instructor_id?: number | null;
+  }) => {
+    try {
+      await fetchJson("/courses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          description: data.description,
+          instructor_id: data.instructor_id ?? null,
+          schedule: data.schedule,
+        }),
+      });
+      mutate("/courses");
+      setIsModalOpen(false);
+      toast.success("Course created");
+    } catch (err) {
+      console.error(err);
+      toast.error((err as Error).message || "Could not create course");
+    }
   };
 
   return (
@@ -66,7 +76,7 @@ export default function CoursesPage() {
                 </tr>
               </thead>
               <tbody>
-                {courses.map((course, index) => (
+                {(courses ?? []).map((course: Course, index: number) => (
                   <tr
                     key={course.id}
                     className={`border-b hover:bg-gray-50 transition ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
@@ -84,7 +94,7 @@ export default function CoursesPage() {
             </table>
           </div>
 
-          {courses.length === 0 && (
+          {(courses ?? []).length === 0 && (
             <div className="text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-500 text-lg">No courses yet. Add one to get started!</p>
             </div>

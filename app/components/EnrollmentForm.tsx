@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface EnrollmentFormProps {
   studentId: number;
@@ -18,7 +19,7 @@ export default function EnrollmentForm({ studentId, onSubmit }: EnrollmentFormPr
       .map((id) => Number(id));
 
     if (ids.length === 0) {
-      alert("Please enter at least one course ID");
+      toast.error("Please enter at least one course ID");
       return;
     }
 
