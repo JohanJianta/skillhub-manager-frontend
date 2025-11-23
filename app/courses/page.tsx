@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Navigation from "@/app/components/Navigation";
 import Modal from "@/app/components/Modal";
 import CourseForm from "@/app/components/CourseForm";
@@ -70,7 +71,11 @@ export default function CoursesPage() {
                     key={course.id}
                     className={`border-b hover:bg-gray-50 transition ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
                   >
-                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">{course.name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                      <Link href={`/courses/${course.id}`} className="font-medium text-blue-600 hover:underline">
+                        {course.name}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-600">{course.description}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{new Date(course.schedule).toLocaleString()}</td>
                   </tr>
